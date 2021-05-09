@@ -3,6 +3,16 @@ import { toast } from 'react-toastify';
 import { api } from '../services/api';
 import { Product, Stock } from '../types';
 
+type StoreProduct = Omit<Product, 'amount'>
+
+interface StoreProductResponse {
+  data: StoreProduct
+}
+
+interface StockResponse {
+  data: Stock
+}
+
 interface CartProviderProps {
   children: ReactNode;
 }
@@ -34,17 +44,39 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
   const addProduct = async (productId: number) => {
     try {
-      // TODO
-    } catch {
-      // TODO
+      const updatedCart = [...cart];
+      const productExistsInCart = updatedCart.find(product => product.id === productId);
+
+      const { data: { amount: stockAmount } } = await api.get(`stock/${productId}`) as StockResponse;
+      const currentAmount = productExistsInCart ? productExistsInCart.amount : 0;
+      const desiredAmount = currentAmount + 1;
+
+      if(desiredAmount > stockAmount){
+        toast.error('Quantidade solicitada fora de estoque')
+        return;
+      }
+
+      if(productExistsInCart){
+        productExistsInCart.amount = desiredAmount;
+      } else {
+        const {data: product} = await api.get(`products/${productId}`) as StoreProductResponse;
+        const newProduct = {...product, amount: 1}
+        updatedCart.push(newProduct);
+      }
+
+      setCart(updatedCart);
+      localStorage.setItem('@RocketShoes:cart', JSON.stringify(updatedCart))
+
+    } catch (error){
+      toast.error('Erro na adição do produto');      
     }
   };
 
   const removeProduct = (productId: number) => {
     try {
-      // TODO
+      TODO
     } catch {
-      // TODO
+      TODO
     }
   };
 
@@ -53,9 +85,9 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     amount,
   }: UpdateProductAmount) => {
     try {
-      // TODO
+      TODO
     } catch {
-      // TODO
+      TODO
     }
   };
 
